@@ -2,21 +2,18 @@ const express = require("express");
 const puppeteer = require("puppeteer");
 const app = express();
 const port = 3000;
+const htmlString = require("./html");
 
 app.get("/pdf", async (req, res) => {
-  const url = req.query.url;
-  const filename = req.query.filename || "document.pdf";
-
-  const browser = await puppeteer.launch();
+  const browser = await puppeteer.launch({
+    headless: false,
+  });
   const page = await browser.newPage();
-  await page.goto(url, { waitUntil: "networkidle2" });
-
-  const buffer = await page.pdf({ format: "A4" });
+  await page.setContent(htmlString);
+  const pdf = await page.pdf({ path: "fwd_devtest.html" });
+  // res.attachment('fwd_devtest.pdf');
+  res.pipe(pdf);
   await browser.close();
-
-  res.setHeader("Content-disposition", `attachment; filename=${filename}`);
-  res.setHeader("Content-Type", "application/pdf");
-  res.send(buffer);
 });
 
 app.listen(port, () => {
